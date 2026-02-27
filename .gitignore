@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environment
+venv/
+venv310/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Models (large files)
+models/
+*.onnx
+*.bin
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Nginx
+access.log
+error.log
+
+# Temporary files
+*.tmp
+*.temp
+*.wav
+*.mp3
+*.mp4
+recordings/
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Scripts generated files
+scripts/.running_pids.json
+
+# User data
+user_data/
+conversations/
+
+# Backup
+*.bak
+*.backup
+backup/
+
+
+piper_windows_amd64/
+piper_windows_amd64.zip

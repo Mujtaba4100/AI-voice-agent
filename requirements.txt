@@ -1,0 +1,88 @@
+# ============================================================================
+# AI Voice Agent - Python Dependencies
+# ============================================================================
+# Install with: pip install -r requirements.txt
+# Python 3.9+ recommended
+# ============================================================================
+
+# ============================================================================
+# WEB FRAMEWORKS
+# ============================================================================
+fastapi==0.109.0            # Async web framework for backend API
+uvicorn[standard]==0.27.0   # ASGI server for FastAPI
+streamlit==1.31.0           # Frontend UI framework
+websockets==12.0            # WebSocket support
+
+# ============================================================================
+# SPEECH TO TEXT (WHISPER)
+# ============================================================================
+faster-whisper==0.9.0       # CPU-optimized Whisper implementation
+torch==2.1.2                # PyTorch (CPU version)
+torchaudio==2.1.2           # Audio processing for PyTorch
+
+# ============================================================================
+# LARGE LANGUAGE MODEL (GEMINI)
+# ============================================================================
+google-generativeai==0.3.2  # Google Gemini API client
+
+# ============================================================================
+# TEXT TO SPEECH (PIPER)
+# ============================================================================
+# piper-tts==1.2.0          # DISABLED: Using native Windows binary instead (piper.exe)
+# onnxruntime==1.17.0       # Not needed for subprocess-based Piper integration
+
+# ============================================================================
+# AUDIO PROCESSING
+# ============================================================================
+soundfile==0.12.1           # Audio file I/O
+sounddevice==0.4.6          # Audio recording/playback
+numpy==1.24.3               # Numerical computing
+scipy==1.11.4               # Scientific computing (audio filters)
+
+# ============================================================================
+# HTTP & API
+# ============================================================================
+requests==2.31.0            # HTTP requests
+aiohttp==3.9.3              # Async HTTP client
+httpx==0.26.0               # Modern HTTP client
+python-multipart==0.0.6     # File upload support for FastAPI
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+pydantic==2.6.0             # Data validation
+python-dotenv==1.0.0        # Environment variable management
+pyyaml==6.0.1               # YAML configuration files
+
+# ============================================================================
+# LOGGING & MONITORING
+# ============================================================================
+loguru==0.7.2               # Advanced logging (optional)
+
+# ============================================================================
+# DEVELOPMENT TOOLS (Optional)
+# ============================================================================
+# pytest==7.4.4             # Testing framework
+# black==23.12.1            # Code formatter
+# flake8==7.0.0             # Linting
+# mypy==1.8.0               # Type checking
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# 
+# Installation order recommended:
+# 1. pip install --upgrade pip setuptools wheel
+# 2. pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+# 3. pip install -r requirements.txt
+#
+# For GPU support (optional, not required):
+# - Replace torch/torchaudio with CUDA versions
+# - Install onnxruntime-gpu instead of onnxruntime
+#
+# Tested on:
+# - Windows 10 (21H2)
+# - Windows 11 (22H2)
+# - Python 3.9, 3.10, 3.11
+#
+# ============================================================================
