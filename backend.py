@@ -53,6 +53,12 @@ WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "tiny")
 WHISPER_COMPUTE_TYPE = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
 WHISPER_CPU_THREADS = int(os.getenv("WHISPER_CPU_THREADS", "4"))
 
+# Whisper Accuracy Settings (higher = more accurate but slower)
+WHISPER_BEAM_SIZE = int(os.getenv("WHISPER_BEAM_SIZE", "5"))
+WHISPER_BEST_OF = int(os.getenv("WHISPER_BEST_OF", "5"))
+WHISPER_TEMPERATURE = float(os.getenv("WHISPER_TEMPERATURE", "0.0"))
+WHISPER_VAD_FILTER = os.getenv("WHISPER_VAD_FILTER", "true").lower() == "true"
+
 # Server Configuration
 BACKEND_HOST = os.getenv("BACKEND_HOST", "0.0.0.0")
 BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8000"))
@@ -210,10 +216,27 @@ async def transcribe_audio(audio_data: bytes) -> str:
             tmp_path = tmp_file.name
         
         # Run transcription in thread pool (blocking operation)
+        # Using configurable parameters from .env for better accuracy
         loop = asyncio.get_event_loop()
+        
+        # Build transcription parameters
+        transcribe_params = dict(
+            beam_size=WHISPER_BEAM_SIZE,
+            best_of=WHISPER_BEST_OF,
+            temperature=WHISPER_TEMPERATURE,
+            language="en"
+        )
+        
+        # Add VAD filter if enabled
+        if WHISPER_VAD_FILTER:
+            transcribe_params["vad_filter"] = True
+            transcribe_params["vad_parameters"] = dict(
+                min_silence_duration_ms=500
+            )
+        
         segments, info = await loop.run_in_executor(
             None,
-            lambda: whisper_model.transcribe(tmp_path, beam_size=1, language="en")
+            lambda: whisper_model.transcribe(tmp_path, **transcribe_params)
         )
         
         # Extract text from segments
