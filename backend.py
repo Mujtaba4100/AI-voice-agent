@@ -15,44 +15,63 @@ from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
 
-import torch
-import numpy as np
+try:
+    import torch
+    import numpy as np
+    from faster_whisper import WhisperModel
+    import soundfile as sf
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    logging.warning("Whisper dependencies not installed. Speech-to-text features disabled.")
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import tts_service
 import google.generativeai as genai
-from faster_whisper import WhisperModel
-import soundfile as sf
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# GLOBAL CONFIGURATION
+# GLOBAL CONFIGURATION (from .env file)
 # ============================================================================
 
-# Model paths
-MODELS_DIR = Path("models")
-WHISPER_MODEL_NAME = "tiny"  # Options: tiny, base, small, medium, large
+# Whisper Configuration
+WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "tiny")
+WHISPER_COMPUTE_TYPE = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
+WHISPER_CPU_THREADS = int(os.getenv("WHISPER_CPU_THREADS", "4"))
 
-# API Configuration
+# Server Configuration
+BACKEND_HOST = os.getenv("BACKEND_HOST", "0.0.0.0")
+BACKEND_PORT = int(os.getenv("BACKEND_PORT", "8000"))
+
+# API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     logger.warning("GEMINI_API_KEY not set. LLM functionality will be limited.")
 
 # System prompt for LLM
-SYSTEM_PROMPT = """You are a helpful AI voice assistant. Answer user questions clearly and concisely.
+SYSTEM_PROMPT = os.getenv(
+    "SYSTEM_PROMPT",
+    """You are a helpful AI voice assistant. Answer user questions clearly and concisely.
 Use counterfactual thinking to provide well-reasoned responses. Keep answers brief and conversational 
 since this is a voice interaction. Aim for 2-3 sentences unless more detail is specifically requested."""
+)
 
 # Global model instances (loaded once, reused across requests)
-whisper_model: Optional[WhisperModel] = None
+whisper_model: Optional[any] = None  # WhisperModel when available
 
 # ============================================================================
 # MODEL INITIALIZATION
@@ -61,17 +80,18 @@ whisper_model: Optional[WhisperModel] = None
 def load_whisper_model():
     """
     Load Faster-Whisper model optimized for CPU inference.
-    Uses INT8 quantization for faster processing.
+    Configuration loaded from .env file.
     """
     global whisper_model
     try:
         logger.info(f"Loading Whisper model: {WHISPER_MODEL_NAME}")
-        # CPU-optimized settings: int8 quantization, 4 threads
+        logger.info(f"Compute type: {WHISPER_COMPUTE_TYPE}, CPU threads: {WHISPER_CPU_THREADS}")
+        
         whisper_model = WhisperModel(
             WHISPER_MODEL_NAME,
             device="cpu",
-            compute_type="int8",
-            cpu_threads=4,
+            compute_type=WHISPER_COMPUTE_TYPE,
+            cpu_threads=WHISPER_CPU_THREADS,
             num_workers=1
         )
         logger.info("Whisper model loaded successfully")
@@ -111,9 +131,12 @@ async def lifespan(app: FastAPI):
     
     # Startup: Load all models into memory
     try:
-        load_whisper_model()
+        if WHISPER_AVAILABLE:
+            load_whisper_model()
+        else:
+            logger.warning("Whisper not available - STT features disabled")
         initialize_gemini()
-        logger.info("All models loaded successfully")
+        logger.info("Available models loaded successfully")
     except Exception as e:
         logger.error(f"Failed to initialize models: {e}")
         raise
@@ -222,7 +245,7 @@ async def generate_llm_response(user_text: str) -> str:
     
     try:
         # Use Gemini 1.5 Flash for fast responses
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         # Combine system prompt with user input
         full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {user_text}\n\nAssistant:"
@@ -294,7 +317,7 @@ async def root():
         "service": "AI Voice Agent API",
         "version": "1.0.0",
         "models": {
-            "whisper": "loaded" if whisper_model else "not loaded",
+            "whisper": "loaded" if (WHISPER_AVAILABLE and whisper_model) else "not available",
             "piper": "subprocess-based (native binary)",
             "gemini": "configured" if GEMINI_API_KEY else "not configured"
         }
@@ -587,11 +610,12 @@ async def websocket_voice_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     
-    # Run single worker for development
+    # Run server with configuration from .env
+    logger.info(f"Starting backend on {BACKEND_HOST}:{BACKEND_PORT}")
     uvicorn.run(
         "backend:app",
-        host="0.0.0.0",
-        port=8000,
+        host=BACKEND_HOST,
+        port=BACKEND_PORT,
         reload=False,
         workers=1
     )

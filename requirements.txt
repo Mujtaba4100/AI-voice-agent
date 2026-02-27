@@ -16,7 +16,7 @@ websockets==12.0            # WebSocket support
 # ============================================================================
 # SPEECH TO TEXT (WHISPER)
 # ============================================================================
-faster-whisper==0.9.0       # CPU-optimized Whisper implementation
+faster-whisper==1.0.0       # CPU-optimized Whisper implementation
 torch==2.1.2                # PyTorch (CPU version)
 torchaudio==2.1.2           # Audio processing for PyTorch
 

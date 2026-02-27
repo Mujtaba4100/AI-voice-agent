@@ -2,7 +2,7 @@
 
 Design goals:
 - Use `piper.exe` subprocess (no piper-tts Python package)
-- Configurable binary and model paths at top of file
+- Configurable binary and model paths via .env file
 - Pathlib usage and clear error handling
 """
 from __future__ import annotations
@@ -13,14 +13,23 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Configurable paths (can be overridden with environment variables)
-# Default locations assume this repository layout; adjust using env vars if needed.
+# Configurable paths from .env or defaults
 PROJECT_ROOT = Path(__file__).resolve().parent
-PIPER_EXE_PATH = Path(os.getenv("PIPER_EXE_PATH", PROJECT_ROOT / "piper_windows_amd64" / "piper" / "piper.exe"))
-PIPER_MODEL_PATH = Path(os.getenv("PIPER_MODEL_PATH", PROJECT_ROOT / "piper_windows_amd64" / "piper" / "models" / "en_US-lessac-medium.onnx"))
+PIPER_EXE_PATH = Path(os.getenv("PIPER_EXE_PATH", "piper_windows_amd64/piper/piper.exe"))
+PIPER_MODEL_PATH = Path(os.getenv("PIPER_MODEL_PATH", "piper_windows_amd64/piper/models/en_US-lessac-medium.onnx"))
+
+# Make paths absolute if they're relative
+if not PIPER_EXE_PATH.is_absolute():
+    PIPER_EXE_PATH = PROJECT_ROOT / PIPER_EXE_PATH
+if not PIPER_MODEL_PATH.is_absolute():
+    PIPER_MODEL_PATH = PROJECT_ROOT / PIPER_MODEL_PATH
 
 
 class PiperError(RuntimeError):

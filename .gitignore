@@ -82,3 +82,7 @@ backup/
 
 piper_windows_amd64/
 piper_windows_amd64.zip
+
+*.md
+
+*.ps1

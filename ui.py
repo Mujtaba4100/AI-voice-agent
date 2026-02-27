@@ -18,8 +18,9 @@ from datetime import datetime
 # CONFIGURATION
 # ============================================================================
 
-# Backend API URL (will be reached through Nginx on port 80)
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost/api")
+# Backend API URL - defaults to direct backend connection
+# If using Nginx proxy, set API_BASE_URL=http://localhost/api in .env
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api")
 
 # Audio recording settings
 SAMPLE_RATE = 16000  # 16kHz for Whisper
