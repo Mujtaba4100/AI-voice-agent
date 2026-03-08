@@ -1,0 +1,84 @@
+# YOUR SPECIFIC NETWORK CONFIGURATION
+# Save this file - contains YOUR network settings!
+
+# ===========================================
+# NETWORK INFO (Discovered automatically)
+# ===========================================
+
+LOCAL_IP=10.141.18.30
+ROUTER_GATEWAY=10.141.16.5
+PUBLIC_IP=111.68.96.40
+
+# ===========================================
+# PORT FORWARDING SETTINGS FOR YOUR ROUTER
+# ===========================================
+# Login to router: http://10.141.16.5
+# Create these port forward rules:
+
+# Rule 1: HTTP
+#   External Port: 80
+#   Internal IP: 10.141.18.30
+#   Internal Port: 80
+#   Protocol: TCP
+
+# Rule 2: HTTPS
+#   External Port: 443
+#   Internal IP: 10.141.18.30
+#   Internal Port: 443
+#   Protocol: TCP
+
+# ===========================================
+# ACCESS URLS
+# ===========================================
+
+# From THIS computer:
+# http://localhost
+
+# From OTHER devices on same WiFi:
+# http://10.141.18.30
+
+# From INTERNET (after port forwarding + firewall):
+# http://111.68.96.40
+
+# From INTERNET with domain (after DuckDNS setup):
+# https://yourdomain.duckdns.org
+
+# ===========================================
+# DUCKDNS SETUP
+# ===========================================
+# 1. Go to: https://www.duckdns.org
+# 2. Sign in with Google/GitHub
+# 3. Create subdomain (e.g., "myvoiceagent")
+# 4. Update IP to: 111.68.96.40
+# 5. Save your token!
+
+# Your domain will be: myvoiceagent.duckdns.org
+# (replace "myvoiceagent" with your chosen name)
+
+# ===========================================
+# QUICK TEST COMMANDS
+# ===========================================
+
+# Test from local:
+# curl http://localhost
+
+# Test port 80 from internet:
+# Visit: https://www.yougetsignal.com/tools/open-ports/
+# Enter IP: 111.68.96.40
+# Enter Port: 80
+# Click "Check"
+
+# ===========================================
+# FIREWALL COMMANDS (Run as Admin)
+# ===========================================
+
+# Create rules:
+# New-NetFirewallRule -DisplayName "AI Voice Agent HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow -Profile Any
+# New-NetFirewallRule -DisplayName "AI Voice Agent HTTPS" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow -Profile Any
+
+# Check rules:
+# Get-NetFirewallRule -DisplayName "AI Voice Agent*"
+
+# Remove rules (if needed):
+# Remove-NetFirewallRule -DisplayName "AI Voice Agent HTTP"
+# Remove-NetFirewallRule -DisplayName "AI Voice Agent HTTPS"

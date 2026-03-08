@@ -32,6 +32,7 @@ from pydantic import BaseModel
 import tts_service
 import google.generativeai as genai
 from dotenv import load_dotenv
+import csv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,6 +44,36 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# HEALTH GUIDELINES (CSV Loading)
+# ============================================================================
+
+HEALTH_GUIDELINES = {}
+
+# CSV path - works in both local and Docker contexts
+CSV_PATH = os.path.join(os.path.dirname(__file__), "health_guidelines.csv")
+
+def load_health_guidelines():
+    """Load health guidelines from CSV file."""
+    global HEALTH_GUIDELINES
+    try:
+        if os.path.exists(CSV_PATH):
+            with open(CSV_PATH, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    category = row['Category'].strip().lower()
+                    HEALTH_GUIDELINES[category] = row
+            logger.info(f"Loaded {len(HEALTH_GUIDELINES)} health guideline categories from {CSV_PATH}")
+        else:
+            logger.warning(f"Health guidelines CSV not found: {CSV_PATH}")
+            logger.warning(f"Current directory: {os.getcwd()}")
+            logger.warning(f"Script directory: {os.path.dirname(__file__)}")
+    except Exception as e:
+        logger.error(f"Failed to load health guidelines: {e}")
+
+# Load guidelines on startup
+load_health_guidelines()
 
 # ============================================================================
 # GLOBAL CONFIGURATION (from .env file)
@@ -71,9 +102,25 @@ if not GEMINI_API_KEY:
 # System prompt for LLM
 SYSTEM_PROMPT = os.getenv(
     "SYSTEM_PROMPT",
-    """You are a helpful AI voice assistant. Answer user questions clearly and concisely.
-Use counterfactual thinking to provide well-reasoned responses. Keep answers brief and conversational 
-since this is a voice interaction. Aim for 2-3 sentences unless more detail is specifically requested."""
+    """You are a helpful health information assistant. Your role is to provide general health information and supportive guidance, NOT medical diagnosis or treatment prescriptions.
+
+IMPORTANT GUIDELINES:
+1. NEVER diagnose medical conditions
+2. NEVER prescribe medications or specific treatments  
+3. ALWAYS recommend seeing a healthcare professional for confirmed diagnosis
+4. Provide empathetic, supportive responses
+5. Focus on general wellness and self-care suggestions
+6. If symptoms are severe or concerning, urge immediate medical care
+
+Available Health Categories: Cold/Flu, Fever, Headache, Nausea, Cough, Body Aches, Sore Throat, Fatigue
+
+Respond with:
+- Empathetic acknowledgment of symptoms
+- General self-care suggestions from guidelines
+- When to seek professional help
+- ALWAYS end with reminder that this is not medical advice
+
+Keep responses under 200 words and conversational since this is a voice interaction."""
 )
 
 # Global model instances (loaded once, reused across requests)

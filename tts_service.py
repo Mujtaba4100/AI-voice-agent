@@ -4,6 +4,7 @@ Design goals:
 - Use `piper.exe` subprocess (no piper-tts Python package)
 - Configurable binary and model paths via .env file
 - Pathlib usage and clear error handling
+- Fallback to silent mode if Piper unavailable (for HF deployment)
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 import logging
 from dotenv import load_dotenv
+import uuid
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,6 +33,14 @@ if not PIPER_EXE_PATH.is_absolute():
 if not PIPER_MODEL_PATH.is_absolute():
     PIPER_MODEL_PATH = PROJECT_ROOT / PIPER_MODEL_PATH
 
+# Check if Piper is available (for Windows local development)
+PIPER_AVAILABLE = PIPER_EXE_PATH.exists() and PIPER_MODEL_PATH.exists()
+
+if not PIPER_AVAILABLE:
+    logger.warning(f"Piper TTS not available. Expected at: {PIPER_EXE_PATH}")
+    logger.warning("Using silent mode for HF Spaces deployment. Audio output disabled.")
+    logger.warning("To enable TTS locally, download Piper: https://github.com/rhasspy/piper/releases")
+
 
 class PiperError(RuntimeError):
     pass
@@ -43,8 +53,27 @@ def _validate_paths() -> None:
         raise FileNotFoundError(f"Piper model not found at: {PIPER_MODEL_PATH}")
 
 
+def _create_silent_wav(output_path: Path) -> None:
+    """Create a minimal silent WAV file for HF deployment when Piper unavailable."""
+    import wave
+    import struct
+    try:
+        # Create a simple silent WAV file (1 second of silence at 16kHz)
+        with wave.open(str(output_path), 'wb') as wav_file:
+            wav_file.setnchannels(1)  # Mono
+            wav_file.setsampwidth(2)  # 16-bit
+            wav_file.setframerate(16000)  # 16kHz
+            # 1 second of silence = 16000 samples of 0
+            silence = struct.pack('<h', 0) * 16000
+            wav_file.writeframes(silence)
+        logger.info(f"Created silent placeholder WAV: {output_path}")
+    except Exception as e:
+        logger.error(f"Failed to create silent WAV: {e}")
+        raise
+
+
 def speak(text: str, output_path: Optional[str] = None) -> str:
-    """Synthesize speech by invoking the native Piper binary.
+    """Synthesize speech by invoking the native Piper binary (or create silent file if unavailable).
 
     Args:
         text: Text to synthesize. Must be non-empty.
@@ -56,12 +85,9 @@ def speak(text: str, output_path: Optional[str] = None) -> str:
     Raises:
         ValueError: If `text` is empty.
         PiperError: If piper.exe fails to synthesize audio.
-        FileNotFoundError: If expected files (binary/model) are missing.
     """
     if not text or not text.strip():
         raise ValueError("`text` must be a non-empty string")
-
-    _validate_paths()
 
     # Prepare output file
     if output_path:
@@ -72,6 +98,13 @@ def speak(text: str, output_path: Optional[str] = None) -> str:
         out_path = Path(tmp.name)
         tmp.close()
 
+    # If Piper not available (HF Spaces), create silent fallback
+    if not PIPER_AVAILABLE:
+        logger.info("Piper TTS not available. Creating placeholder audio for HF Spaces.")
+        _create_silent_wav(out_path)
+        return str(out_path.absolute())
+
+    # Piper is available locally - use it
     # Build command
     cmd = [str(PIPER_EXE_PATH), "--model", str(PIPER_MODEL_PATH), "--output_file", str(out_path)]
 

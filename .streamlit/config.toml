@@ -1,0 +1,28 @@
+# Streamlit configuration for Hugging Face Spaces deployment
+
+[client]
+showErrorDetails = true
+
+[logger]
+level = "info"
+
+[theme]
+primaryColor = "#FF6B6B"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
+font = "sans serif"
+
+[server]
+port = 8501
+address = "0.0.0.0"
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+# Disable watchdog for HF compatibility
+[client.toolbarMode]
+value = "minimal"
+
+[browser]
+gatherUsageStats = false

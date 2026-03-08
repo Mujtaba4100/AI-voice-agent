@@ -27,6 +27,23 @@ SAMPLE_RATE = 16000  # 16kHz for Whisper
 CHANNELS = 1  # Mono audio
 DTYPE = np.int16  # 16-bit audio
 
+# Medical Disclaimer for Health Information
+MEDICAL_DISCLAIMER = """
+⚠️ **IMPORTANT MEDICAL DISCLAIMER** ⚠️
+
+This tool provides **general health information only** and is **NOT a substitute for professional medical advice, diagnosis, or treatment**.
+
+**Always consult with a qualified healthcare professional** for:
+- Any medical concerns or symptoms
+- Proper diagnosis and treatment recommendations
+- Questions about medications or medical procedures
+- Emergency medical situations
+
+**🚨 IN CASE OF EMERGENCY:** Call your local emergency number (911 in US/Canada, 999 in UK, 112 in EU) immediately.
+
+This information is for **educational purposes only** and cannot replace professional medical judgment.
+"""
+
 # ============================================================================
 # PAGE CONFIGURATION
 # ============================================================================
@@ -321,6 +338,9 @@ def main():
                 if result:
                     # Display results
                     st.success("✅ Response received!")
+                    
+                    # Show medical disclaimer
+                    st.warning(MEDICAL_DISCLAIMER)
                     
                     # Show transcription
                     with st.expander("📝 Your message", expanded=True):

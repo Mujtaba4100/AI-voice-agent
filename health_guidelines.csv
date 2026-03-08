@@ -1,0 +1,9 @@
+Category,Symptoms,Recommended_Action,Key_Points,Safety_Level
+"Cold/Flu","Cough, Runny Nose, Sore Throat, Fatigue","Rest, Stay hydrated, Use humidifier, Over-the-counter pain relievers","Usually resolves in 7-10 days. Wash hands frequently.","Low"
+"Fever","High temperature (>100.4F/38C), Chills, Body aches","Monitor temperature, Stay hydrated, Rest, Take fever reducer if needed","Seek medical care if fever exceeds 103F or lasts >3 days.","Medium"
+"Headache","Head pain, Pressure, Light sensitivity, Nausea","Rest in quiet dark room, Over-the-counter pain reliever, Hydration, Cold/warm compress","Persistent headache lasting >24 hours requires medical evaluation.","Low"
+"Nausea","Feeling of sickness, Stomach discomfort, Loss of appetite","Rest, Light foods (crackers, broth), Ginger tea, Anti-nausea remedies","Seek help if vomiting lasts >4 hours or accompanied by severe pain.","Medium"
+"Cough","Persistent cough, Chest discomfort, Throat irritation","Cough drops, Honey and lemon tea, Stay hydrated, Humidifier","Seek care if cough lasts >3 weeks or produces blood.","Medium"
+"Body Aches","Muscle pain, Joint pain, General discomfort","Rest, Gentle stretching, Warm bath, Over-the-counter pain reliever, Heat pad","Usually subsides with rest. Persistent pain requires evaluation.","Low"
+"Sore Throat","Pain when swallowing, Throat inflammation, Hoarseness","Throat lozenges, Warm salt water gargle, Honey tea, Pain reliever, Rest voice","Seek care if pain severe or accompanied by difficulty breathing.","Medium"
+"Fatigue","Extreme tiredness, Low energy, Difficulty concentrating","Rest, Sleep 7-9 hours, Nutrition, Hydration, Gentle exercise","Persistent fatigue may indicate underlying condition - consult doctor.","Low"
