@@ -1,34 +1,21 @@
-# Use Python 3.10 slim image
-FROM python:3.10-slim
+# Use Python 3.11 slim image (better wheel support than 3.10)
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for audio processing and compilation
+# Install system dependencies (runtime only - no build tools to prevent source compilation)
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3-dev \
     ffmpeg \
-    libffmpeg-ocaml-dev \
-    libavformat-dev \
-    libavcodec-dev \
-    libavdevice-dev \
-    libavutil-dev \
-    libavfilter-dev \
-    libswscale-dev \
-    libswresample-dev \
     libsndfile1 \
-    libsndfile1-dev \
     curl \
-    portaudio19-dev \
-    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements (using client requirements)
 COPY requirements_client.txt requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies (--only-binary prevents any source compilation)
+RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
 
 # Copy project files
 COPY . .
