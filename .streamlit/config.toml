@@ -2,6 +2,7 @@
 
 [client]
 showErrorDetails = true
+toolbarMode = "minimal"
 
 [logger]
 level = "info"
@@ -14,15 +15,11 @@ textColor = "#FAFAFA"
 font = "sans serif"
 
 [server]
-port = 8501
+port = 7860
 address = "0.0.0.0"
 headless = true
 enableCORS = false
-enableXsrfProtection = true
-
-# Disable watchdog for HF compatibility
-[client.toolbarMode]
-value = "minimal"
+enableXsrfProtection = false
 
 [browser]
 gatherUsageStats = false

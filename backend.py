@@ -1,8 +1,8 @@
 """
 AI Voice Agent Backend Server
 FastAPI-based async server for voice conversation system
-Supports: Faster-Whisper STT, Google Gemini LLM, Piper TTS
-Optimized for CPU inference on Windows 10/11
+Supports: Faster-Whisper STT, Google Gemini LLM, Edge-TTS
+Optimized for CPU inference and Linux cloud deployments (HF Spaces)
 """
 
 import os
@@ -80,7 +80,7 @@ load_health_guidelines()
 # ============================================================================
 
 # Whisper Configuration
-WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "tiny")
+WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "small")
 WHISPER_COMPUTE_TYPE = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
 WHISPER_CPU_THREADS = int(os.getenv("WHISPER_CPU_THREADS", "4"))
 
@@ -153,7 +153,7 @@ def load_whisper_model():
         raise
 
 
-# Piper TTS now uses subprocess-based approach via tts_service.py
+# Edge-TTS: Cloud-based Microsoft Azure TTS via tts_service.py
 # No need to load Python package models
 
 
@@ -338,7 +338,7 @@ async def generate_llm_response(user_text: str) -> str:
 
 async def synthesize_speech(text: str) -> bytes:
     """
-    Convert text to speech using Piper TTS subprocess.
+    Convert text to speech using Edge-TTS (Microsoft Azure).
     
     Args:
         text: Text to synthesize
@@ -347,12 +347,8 @@ async def synthesize_speech(text: str) -> bytes:
         WAV audio bytes
     """
     try:
-        # Use subprocess-based TTS service
-        loop = asyncio.get_event_loop()
-        output_file = await loop.run_in_executor(
-            None,
-            lambda: tts_service.speak(text)
-        )
+        # Use async TTS service (proper async handling for Edge-TTS)
+        output_file = await tts_service.speak_async(text)
         
         # Read the generated file
         with open(output_file, "rb") as f:
@@ -388,7 +384,9 @@ async def root():
         "version": "1.0.0",
         "models": {
             "whisper": "loaded" if (WHISPER_AVAILABLE and whisper_model) else "not available",
-            "piper": "subprocess-based (native binary)",
+            "tts_piper": "Piper (offline)" if hasattr(tts_service, 'PIPER_AVAILABLE') and tts_service.PIPER_AVAILABLE else "unavailable",
+            "tts_edge": "Edge-TTS (cloud)" if hasattr(tts_service, 'EDGE_TTS_AVAILABLE') and tts_service.EDGE_TTS_AVAILABLE else "unavailable",
+            "tts_gtts": "gTTS (fallback)" if hasattr(tts_service, 'GTTS_AVAILABLE') and tts_service.GTTS_AVAILABLE else "unavailable",
             "gemini": "configured" if GEMINI_API_KEY else "not configured"
         }
     }
@@ -402,7 +400,9 @@ async def health_check():
         "timestamp": time.time(),
         "models_loaded": {
             "whisper": whisper_model is not None,
-            "piper": "subprocess",
+            "tts_piper": "available" if hasattr(tts_service, 'PIPER_AVAILABLE') and tts_service.PIPER_AVAILABLE else "unavailable",
+            "tts_edge": "available" if hasattr(tts_service, 'EDGE_TTS_AVAILABLE') and tts_service.EDGE_TTS_AVAILABLE else "unavailable",
+            "tts_gtts": "available" if hasattr(tts_service, 'GTTS_AVAILABLE') and tts_service.GTTS_AVAILABLE else "unavailable",
             "gemini": GEMINI_API_KEY is not None
         }
     }
@@ -497,9 +497,10 @@ async def synthesize_endpoint(request: TextRequest):
 
 @app.post("/tts")
 async def tts_endpoint(request: TextRequest):
-    """Simple TTS endpoint that uses the external Piper binary via subprocess.
-
-    Returns the generated WAV file as an attachment.
+    """Simple TTS endpoint with multi-engine fallback.
+    
+    Uses Piper (offline) → Edge-TTS (cloud) → gTTS (fallback) → Silent.
+    Returns the generated audio file as an attachment.
     """
     try:
         # Create a temporary output file and call the reusable TTS service
@@ -507,7 +508,7 @@ async def tts_endpoint(request: TextRequest):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
             tmp_path = tmp.name
 
-        # Call the subprocess-based Piper wrapper
+        # Call the async Edge-TTS wrapper
         out_file = tts_service.speak(request.text, output_path=tmp_path)
 
         # Read bytes, remove temp file, and return streaming response
@@ -536,7 +537,7 @@ async def voice_chat_endpoint(audio: UploadFile = File(...)):
     Complete voice conversation pipeline:
     1. Speech to Text (Whisper)
     2. LLM Response (Gemini)
-    3. Text to Speech (Piper)
+    3. Text to Speech (Piper → Edge-TTS → gTTS fallback)
     
     Args:
         audio: Audio file from user

@@ -3,12 +3,13 @@
 # Note: Streamlit handles audio via browser, so no system audio libraries needed
 
 # Web Framework
-streamlit==1.31.0
+streamlit>=1.33.0
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
+python-multipart==0.0.6
 
 # Speech-to-Text
-faster-whisper==0.11.0
+faster-whisper==1.0.3
 torch==2.1.2
 
 # AI/LLM
@@ -17,6 +18,10 @@ google-generativeai==0.3.0
 # Audio Processing (minimal - soundfile needed for temp file handling)
 soundfile==0.12.1
 numpy==1.24.3
+
+# Text-to-Speech (Multiple engines for reliability)
+edge-tts==6.1.9
+gTTS==2.5.1
 
 # Utilities
 requests==2.31.0
